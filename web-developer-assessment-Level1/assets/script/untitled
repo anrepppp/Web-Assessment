@@ -1,0 +1,78 @@
+var LOWES = {}; // LOWES implies Name Space
+
+LOWES.Controller = {
+  productListURL: 'http://m.lowes.com/IntegrationServices/resources/productList/json/v3_0/4294857975?langId=-1&storeId=10702&catalogId=10051&nValue=4294857975&storeNumber=0595&pageSize=20&firstRecord=0&refinements=5003703',
+  init: function() {
+    var url = LOWES.Controller.productListURL;
+    var callback = LOWES.Populate.init;
+    LOWES.Ajax.post(url, callback);
+  }
+};
+
+LOWES.Ajax = {
+  post: function(url, callback) {
+    $.ajax({
+        type: "GET",
+        url: url,
+        dataType: "json",
+        success: function (data) {
+          callback(data);
+        }
+    });
+  }
+};
+
+LOWES.Populate = {
+  productList: '',
+  init: function(data) {
+    LOWES.Populate.productList = data.ProductsList;
+    LOWES.Populate.heroArea(LOWES.Populate.productList[0]);
+    LOWES.Populate.productListArea(LOWES.Populate.productList);
+    $('.mainContent').show();
+    LOWES.Handlers.init();
+  },
+  heroArea: function(productObj){
+    $('.heroArea .col-1 img').attr('src',productObj.imageURLs.lg);
+    $('.heroArea .col-2 p').text(productObj.ProductInfo.Brand+' '+productObj.ProductInfo.p_product_description);
+    var bulletList = "";
+    for(var i in productObj.ProductInfo.p_product_bullets_json.Value){
+      bulletList += ("<li>"+productObj.ProductInfo.p_product_bullets_json.Value[i]+"</li>");
+    }
+    $('.heroArea .col-2 ul').html(bulletList);
+    $('.heroArea .col-3 .itemPrice').text('$'+productObj.ProductInfo.p_product_price);
+  },
+  productListArea: function(productListObj) {
+    var productsList = '<div class="productListRow">';
+    var count=0;
+    for(var i in productListObj){
+      if (count%3 == 0){
+        productsList += '</div><div class="productListRow">';
+      }
+      productsList += '<div id="product-'+i+'" class="subcol-'+((count%3)+1)+'"><img src="'+productListObj[i].imageURLs.sm+'" /><p class="productDescription">'+productListObj[i].ProductInfo.Brand+' '+productListObj[i].ProductInfo.p_product_description+'</p><p>$'+productListObj[i].ProductInfo.p_product_price+'</p><p class="viewMoreButton">View More</p></div>';
+      count++;
+    }
+    productsList += '</div><div class="bottomContent"></div>';
+    $('#productList').html(productsList);
+  }
+};
+/*
+LOWES.Handlers = {
+  init: function(data) {
+    $( ".heroArea .addToCartButton" ).on( "click", function() {
+      LOWES.Handlers.addToCart();
+    });
+    $( ".productList .viewMoreButton" ).mouseover( "click", function(this) {
+      LOWES.Handlers.onProductMouseOver();
+    });
+  },
+  addToCart: function(){
+    
+  },
+  onProductMouseOver: function(){
+
+  }
+};*/
+
+$( document ).ready(function() {
+    LOWES.Controller.init();
+});
